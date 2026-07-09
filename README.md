@@ -8,8 +8,11 @@ A lightweight, standalone JavaScript/TypeScript parser and SVG renderer for clin
 
 ## Live Playground
 
-To try it out visually in your browser, just double-click or open the interactive sandbox:
-👉 **[examples/index.html](file:///c:/PlayGround/gene-code/examples/index.html)**
+Try out the live interactive sandbox directly in your browser:
+👉 **[https://rubanbalaji-g.github.io/pedigrem/](https://rubanbalaji-g.github.io/pedigrem/)**
+
+Or open it locally from the repository:
+👉 [examples/index.html](file:///c:/PlayGround/gene-code/examples/index.html)
 
 ---
 
