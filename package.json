@@ -6,11 +6,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && esbuild src/index.ts --bundle --format=cjs --platform=node --outfile=dist/pedigrem.cjs",
     "test": "tsc && node --test dist/tests/pedigree.test.js"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "esbuild": "^0.28.1",
     "typescript": "^5.0.0"
   }
 }
