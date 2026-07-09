@@ -1,0 +1,9 @@
+{
+  "id": "obsidian-pedigrem",
+  "name": "Pedigrem",
+  "version": "1.0.0",
+  "minAppVersion": "1.0.0",
+  "description": "Render clinical pedigree charts in your notes using clean symbolic code blocks.",
+  "author": "Rubanbalaji",
+  "isDesktopOnly": false
+}
