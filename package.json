@@ -1,24 +1,16 @@
 {
-  "name": "gene-code",
-  "module": "index.ts",
+  "name": "pedigrem",
+  "version": "1.0.0",
+  "description": "A lightweight, text-to-SVG clinical pedigree chart generator powered by a highly simplified, human-readable DSL.",
   "type": "module",
-  "devDependencies": {
-    "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.31.0",
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "workspaces": [
-    "packages/*"
-  ],
-  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "bun scripts/pin-workspace-deps.ts && changeset publish",
-    "build:core": "bun --filter=@gene-code/core run build ",
-    "build:rehype": "bun --filter=@gene-code/rehype run build"
+    "build": "tsc",
+    "test": "tsc && node --test dist/tests/pedigree.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
   }
 }

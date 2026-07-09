@@ -1,84 +1,126 @@
-# gene-code
+# Pedigrem 📊
 
-A mermaid for life-science diagrams.
+A lightweight, standalone JavaScript/TypeScript parser and SVG renderer for clinical pedigree charts. 
 
-This is a rehype plugin that enables the mermaid-like diagram code visualizations.
+**Pedigrem** converts a highly simplified, symbolic, and human-readable DSL (domain-specific language) directly into publication-quality SVG diagrams. It is designed for clinical geneticists, medical researchers, and software integrations (like Obsidian, electronic health records, or web apps).
 
-Just use `gene-code` as lang parameter on a code block, followed by diagram description:
+---
 
-````markdown
-```gene-code
-lollipopDiagram
-    gene KRAS
-    length 189
-    domain 5 166 GTPase
-    domain 167 185 HVR
-    variant G12D 12 missense
-    variant G12V 12 missense
-    variant G12C 12 missense
-    variant G12A 12 missense
-    variant G12S 12 missense
-    variant G12R 12 missense
-    variant G13D 13 missense
-    variant G13C 13 missense
-    variant V14I 14 missense
-    variant L19F 19 missense
-    variant Q22K 22 missense
-    variant T35fs 35 frameshift
-```
-````
+## Live Playground
 
-Currently supports two types of diagrams:
+To try it out visually in your browser, just double-click or open the interactive sandbox:
+👉 **[examples/index.html](file:///c:/PlayGround/gene-code/examples/index.html)**
 
-- Lollipop variants diagram: `lollipopDiagram`
-- Pedigree diagram: `pedigreeDiagram`
+---
 
-## Lollipop variants diagram: `lollipopDiagram`
+## DSL Syntax Specification
 
-The syntax:
+Pedigrem parses your text file line by line. Empty lines and lines starting with `%` or `#` are ignored as comments.
 
-```
-lollipopDiagram               <-- diagram type
-    gene KRAS                 <-- label of the gene
-    length 189                <-- length
-    domain 5 166 GTPase       <-- protein domain start, end and label
-    domain 167 185 HVR
-    variant G12D 12 missense  <-- variant label, pos ans class
-```
+### 1. Individuals (No prefix)
+Define nodes and their characteristics using this format:
+`[id] [sex] [status] [attributes...]`
 
-## Pedigree diagram: `pedigreeDiagram`
+- **Sex**:
+  - `M`: Male (drawn as a square)
+  - `F`: Female (drawn as a circle)
+  - `U`: Unknown sex (drawn as a diamond)
+  - `A`: Ambiguous sex (drawn as a diamond with a `?` inside)
+- **Status (Genotype/Phenotype Shading)**:
+  - `Af`: Affected (fully filled/shaded symbol)
+  - `UAf`: Unaffected (unshaded outline)
+  - `Ca`: Carrier (left-half shaded for autosomal carriers)
+  - `XCa`: X-linked carrier (symbol containing a central solid dot)
+  - `Unk`: Unknown status (drawn as a normal sex shape with a `?` inside)
+- **Label Attribute**:
+  - `[label:Line1|Line2]`: Displays text labels below the symbol. Use `|` for multi-line text (e.g. `[label:Arthur|Prostate Cancer]`). Node IDs (e.g., `Arthur`) are internal references and **not** printed unless included in this label.
+- **Attributes** (space-separated, optional):
+  - Any number/unit (e.g., `45`, `12`, `3m`) is automatically parsed as **age** and displayed at the very bottom (below labels).
+  - `index`: Index case / Proband (draws an arrow pointing to the node).
+  - `dead`: Deceased status (draws a diagonal slash `/` through the node).
+  - `adopted-in`: Adopted into the family (draws brackets `[ ]` around the symbol).
+  - `adopted-out`: Adopted out of the family (draws brackets `[ ]` and connects with a dashed parents line).
+  - `preg`: Ongoing pregnancy (draws a diamond with a `P` inside).
+  - `misc`: Miscarriage / Spontaneous abortion (draws a small triangle).
+  - `induced`: Induced abortion / Terminated pregnancy (draws a small triangle with a diagonal slash).
+  - `sb`: Stillbirth (draws normal symbol with a diagonal slash and "SB" text below it).
 
-```
-pedigreeDiagram
-    node gf male unaffected noncarrier        <-- node/individual's ID, sex, phenotype, genotype
-    node gm female unaffected carrier
-    couple gf gm                              <-- parents node IDs
-    node uncle male unknown unknown gf-gm
-    node dad male unaffected carrier gf-gm
-    node mom female unaffected carrier
-    couple dad mom
-    node childless_a male unaffected noncarrier gf-gm
-    node childless_b female unaffected unknown
-    couple childless_a childless_b
-    node son male affected carrier dad-mom
-    node daughter female unaffected carrier dad-mom
-    node baby male unaffected noncarrier dad-mom
+*Example:*
+```text
+I1 M UAf 72 [label:Arthur]
+I2 F UAf 70 [label:Beatrice]
+II1 M Af 45 index [label:Charles|Dengue]
+II2 F UAf 43 [label:Diana]
+III1 F UAf 12 [label:Emily]
 ```
 
-# Usage in markdown
+### 2. Relationships & Children (Prefix `~`)
+Define relationships and offspring using this format:
+`~ [parent1][operator][parent2] > [children_expression]`
 
-Use as any other rehype plugins.
-See the `example-react` package for basic example.
+- **Operators**:
+  - `-`: Normal relationship
+  - `=`: Consanguineous relationship (renders as double parallel marriage lines)
+  - `/`: Divorced (renders as a double slash `//` across the marriage line)
+  - `|`: Separated (renders as a single slash `/` across the marriage line)
+- **Children Expression** (after `>`):
+  - Children are comma-separated.
+  - **Twins/Triplets**:
+    - `[child1,child2]`: Monozygotic twins (diagonal lines split from a single point on the sibship bar, linked by a horizontal crossline).
+    - `[[child1,child2]]`: Dizygotic twins (diagonal lines split from a single point on the sibship bar).
+  - **Childless Couples**:
+    - Empty: Childless by choice (draws a vertical drop ending in a single horizontal `T` bar).
+    - `*`: Childless due to infertility (draws a double crossbar `T` bar).
 
-```tsx
-// App.tsx
-
-import rehypeGeneCode from "@gene-code/rehype";
-import remarkGfm from "remark-gfm";
-import Markdown from "react-markdown";
-
-//... in a component
-<Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeGeneCode]}>
-  {text}
-</Markdown>;
+*Examples:*
+```text
+~ Arthur-Beatrice > Charles,Diana          # Normal marriage, children Charles and Diana
+~ Father = Mother > Son,[TwinA,TwinB]      # Consanguineous, child Son and monozygotic twins TwinA & TwinB
+~ Alice/Bob > Charlie,[[Diana,April]]      # Divorced, child Charlie and dizygotic twins Diana & April
+~ Alice|Bob >                              # Separated, childless by choice
+~ Sarah-Bob > *                            # Infertility childless marker
 ```
+
+### 3. Legends (Prefix `!`)
+Define legend items displayed at the bottom of the canvas:
+`! [status] [description]`
+
+*Example:*
+```text
+! Af Breast Cancer
+! Ca BRCA1 Mutation
+! XCa BRCA2 Carrier
+```
+
+---
+
+## Technical Features
+
+- **Dynamic Row Spacing**: Layout engine dynamically analyzes the text height (labels + age) for each generation level and expands rows to prevent text from overlapping with lines or children nodes.
+- **Auto-Positioning**: Automatically centers parents over their children's midpoint.
+- **Standardized Graphics**: Output SVG complies with clinical pedigree chart guidelines.
+
+---
+
+## Development
+
+### Install Dependencies
+```bash
+npm install
+```
+
+### Build the Project
+```bash
+npm run build
+```
+
+### Run Tests
+```bash
+npm test
+```
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). Anyone is free to copy, modify, and distribute the code, provided that the original copyright notice and license are included.
